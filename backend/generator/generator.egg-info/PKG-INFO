@@ -1,0 +1,19 @@
+Metadata-Version: 2.4
+Name: generator
+Version: 0.1.0
+Summary: Image and video generation server with AI models
+Requires-Python: >=3.11
+Requires-Dist: accelerate>=1.11.0
+Requires-Dist: boto3>=1.40.65
+Requires-Dist: diffusers>=0.35.2
+Requires-Dist: fastapi>=0.121.0
+Requires-Dist: nvidia-ml-py3>=7.352.0
+Requires-Dist: peft>=0.17.1
+Requires-Dist: pillow>=12.0.0
+Requires-Dist: pydantic-settings>=2.11.0
+Requires-Dist: python-multipart>=0.0.20
+Requires-Dist: redis>=7.0.1
+Requires-Dist: requests>=2.31.0
+Requires-Dist: torch>=2.9.0
+Requires-Dist: transformers>=4.57.1
+Requires-Dist: uvicorn>=0.38.0

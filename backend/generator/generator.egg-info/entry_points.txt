@@ -1,0 +1,3 @@
+[console_scripts]
+image-generate = cli:main
+server = server:run

@@ -14,6 +14,7 @@ import logging
 # Import model routers
 from models import flux
 from models import qwen_multi_angle
+from models import watermark_removal
 
 # Import services
 from services.redis_service import redis_service
@@ -54,6 +55,7 @@ async def root():
         "models": [
             "flux",
             "qwen-multi-angle",
+            "watermark-removal",
         ],
         "redis_connected": redis_service.ping(),
     }
@@ -108,6 +110,7 @@ async def trigger_cleanup():
 # Include all model routers
 app.include_router(flux.router)
 app.include_router(qwen_multi_angle.router)
+app.include_router(watermark_removal.router)
 
 
 def run():

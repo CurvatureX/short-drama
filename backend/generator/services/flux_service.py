@@ -12,6 +12,8 @@ from typing import Optional
 from services.model_manager import model_manager
 from services.vram_manager import vram_manager
 from services.optimization import optimization_manager
+from services.model_loader import model_loader
+from config import model_paths
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +37,7 @@ class FluxModelService:
         logger.info("FluxModelService initialized with advanced resource management")
 
     def _get_or_load_model(self) -> FluxPipeline:
-        """Get model from cache or load it"""
+        """Get model from cache or load it with fallback"""
         # Check VRAM before loading
         vram_stats = vram_manager.get_vram_stats()
         logger.info(
@@ -46,11 +48,12 @@ class FluxModelService:
         # Cleanup if needed
         vram_manager.cleanup_if_needed()
 
-        # Load model using model manager (handles caching)
-        model = model_manager.load_model(
-            model_name=self.model_name,
+        # Load model with fallback: try local first, then HuggingFace
+        logger.info("Loading Flux model...")
+        model = model_loader.load_safetensors_model(
+            local_path=model_paths.flux_checkpoint,  # Try local first
+            hf_repo=self.model_name,  # Fallback to "black-forest-labs/FLUX.1-dev"
             model_class=FluxPipeline,
-            variant="default",
             torch_dtype=optimization_manager.get_optimal_dtype(),
             low_cpu_mem_usage=True,
             use_safetensors=True,

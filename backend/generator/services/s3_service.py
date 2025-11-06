@@ -34,6 +34,7 @@ class S3Service:
         session_id: str,
         file_extension: str = "png",
         content_type: str = "image/png",
+        s3_folder: str = "images",  # "images" or "videos"
     ) -> Optional[str]:
         """
         Upload file to S3
@@ -43,6 +44,7 @@ class S3Service:
             session_id: Unique session identifier
             file_extension: File extension (png, jpg, mp4, etc.)
             content_type: MIME type of the file
+            s3_folder: S3 folder prefix (images or videos)
 
         Returns:
             S3 URL of the uploaded file or None if failed
@@ -50,7 +52,7 @@ class S3Service:
         try:
             # Generate S3 key with timestamp and session_id
             timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-            s3_key = f"generations/{timestamp}_{session_id}.{file_extension}"
+            s3_key = f"{s3_folder}/{timestamp}_{session_id}.{file_extension}"
 
             # Upload to S3
             self.s3_client.put_object(

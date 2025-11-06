@@ -33,6 +33,7 @@ class TaskService:
         generation_kwargs: Dict[str, Any],
         file_extension: str = "png",
         content_type: str = "image/png",
+        s3_folder: str = "images",
     ) -> None:
         """
         Process image/video generation task in background
@@ -43,6 +44,7 @@ class TaskService:
             generation_kwargs: Kwargs to pass to generation function
             file_extension: File extension for upload
             content_type: MIME type for upload
+            s3_folder: S3 folder prefix (images or videos)
         """
         try:
             # Update status to processing
@@ -64,7 +66,7 @@ class TaskService:
                 session_id=session_id,
                 status="processing",
                 progress=60,
-                message="Generation complete, uploading to S3...",
+                message=f"Generation complete, uploading to S3 ({s3_folder})...",
             )
 
             # Upload to S3
@@ -73,6 +75,7 @@ class TaskService:
                 session_id=session_id,
                 file_extension=file_extension,
                 content_type=content_type,
+                s3_folder=s3_folder,
             )
 
             if s3_url:
@@ -110,6 +113,7 @@ class TaskService:
         generation_kwargs: Dict[str, Any],
         file_extension: str = "png",
         content_type: str = "image/png",
+        s3_folder: str = "images",
     ) -> str:
         """
         Submit a new generation task
@@ -119,6 +123,7 @@ class TaskService:
             generation_kwargs: Kwargs to pass to generation function
             file_extension: File extension for upload
             content_type: MIME type for upload
+            s3_folder: S3 folder prefix (images or videos)
 
         Returns:
             session_id for tracking the task
@@ -141,6 +146,7 @@ class TaskService:
                 generation_kwargs=generation_kwargs,
                 file_extension=file_extension,
                 content_type=content_type,
+                s3_folder=s3_folder,
             )
         )
 

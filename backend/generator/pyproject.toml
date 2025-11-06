@@ -14,6 +14,7 @@ dependencies = [
     "pydantic-settings>=2.11.0",
     "python-multipart>=0.0.20",
     "redis>=7.0.1",
+    "requests>=2.31.0",
     "torch>=2.9.0",
     "transformers>=4.57.1",
     "uvicorn>=0.38.0",
@@ -21,3 +22,10 @@ dependencies = [
 
 [project.scripts]
 server = "server:run"
+image-generate = "cli:main"
+
+[tool.setuptools]
+py-modules = ["cli", "server", "config"]
+
+[tool.setuptools.packages.find]
+include = ["models*", "services*"]
