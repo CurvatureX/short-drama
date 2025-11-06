@@ -65,17 +65,22 @@ apt-get install -y \
 
 print_status "System dependencies installed"
 
-# Step 2: Check for GPU and install drivers
+# Step 2: Check for GPU and drivers
 echo ""
 echo "🎮 Checking for GPU..."
-if lspci | grep -i nvidia > /dev/null; then
-    print_warning "NVIDIA GPU detected"
+if command -v nvidia-smi &> /dev/null; then
+    GPU_INFO=$(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | head -n 1)
+    print_status "NVIDIA GPU detected: $GPU_INFO"
+    print_status "NVIDIA drivers already installed (nvidia-smi found)"
+elif lspci | grep -i nvidia > /dev/null; then
+    print_warning "NVIDIA GPU detected but drivers not installed"
     read -p "Install NVIDIA drivers? (y/n): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         echo "Installing NVIDIA drivers..."
         apt-get install -y nvidia-driver-535 nvidia-cuda-toolkit > /dev/null 2>&1
-        print_status "NVIDIA drivers installed (reboot may be required)"
+        print_status "NVIDIA drivers installed"
+        print_warning "Reboot required for drivers to take effect"
     fi
 else
     print_warning "No NVIDIA GPU detected (CPU mode only)"
