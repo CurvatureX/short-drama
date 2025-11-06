@@ -124,11 +124,11 @@ fi
 # Step 6: Install Python dependencies
 echo ""
 echo "📦 Installing Python dependencies (this may take a few minutes)..."
-sudo -u "$SERVICE_USER" bash << 'EOF'
+sudo -u "$SERVICE_USER" bash << EOF
 source "$VENV_DIR/bin/activate"
 pip install --upgrade pip > /dev/null 2>&1
 pip install uv > /dev/null 2>&1
-uv pip install -e . > /dev/null 2>&1
+uv pip install -e "$INSTALL_DIR" > /dev/null 2>&1
 EOF
 
 print_status "Python dependencies installed"
