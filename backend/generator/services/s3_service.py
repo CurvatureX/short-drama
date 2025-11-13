@@ -10,6 +10,7 @@ from datetime import datetime
 from io import BytesIO
 from PIL import Image
 import requests
+from urllib.parse import unquote
 from config import settings
 
 logger = logging.getLogger(__name__)
@@ -126,14 +127,27 @@ class S3Service:
         try:
             logger.info(f"Downloading image from: {url}")
 
-            # Check if it's an S3 URL from our bucket
+            # For S3 URLs, try HTTP/HTTPS first (works for public buckets)
+            # This avoids URL encoding issues with the S3 API
             if self.bucket_name in url and "s3" in url.lower():
-                # Extract S3 key from URL
-                s3_key = self._extract_s3_key_from_url(url)
-                if s3_key:
-                    return self.download_image_from_s3(s3_key)
+                try:
+                    # Try HTTP download first
+                    response = requests.get(url, timeout=30)
+                    response.raise_for_status()
+                    image = Image.open(BytesIO(response.content))
+                    if image.mode != "RGB":
+                        image = image.convert("RGB")
+                    logger.info(f"Successfully downloaded image via HTTP: {image.size}")
+                    return image
+                except Exception as http_error:
+                    # HTTP failed, try S3 API as fallback
+                    logger.warning(f"HTTP download failed: {http_error}, trying S3 API...")
+                    s3_key = self._extract_s3_key_from_url(url)
+                    if s3_key:
+                        return self.download_image_from_s3(s3_key)
+                    raise http_error
 
-            # Otherwise, download via HTTP/HTTPS
+            # For non-S3 URLs, download via HTTP/HTTPS
             response = requests.get(url, timeout=30)
             response.raise_for_status()
 
@@ -209,17 +223,18 @@ class S3Service:
                 parts = url.split(f"{self.bucket_name}.s3")
                 if len(parts) > 1:
                     key = parts[1].split("/", 2)[-1]
-                    return key
+                    # URL-decode the key to handle spaces and special characters
+                    return unquote(key)
             elif f"s3." in url and f"/{self.bucket_name}/" in url:
                 # Format 2
                 parts = url.split(f"/{self.bucket_name}/")
                 if len(parts) > 1:
-                    return parts[1]
+                    return unquote(parts[1])
             elif settings.s3_endpoint_url and settings.s3_endpoint_url in url:
                 # Format 3 (custom endpoint)
                 parts = url.split(f"/{self.bucket_name}/")
                 if len(parts) > 1:
-                    return parts[1]
+                    return unquote(parts[1])
 
             logger.warning(f"Could not extract S3 key from URL: {url}")
             return None

@@ -6,7 +6,7 @@ import asyncio
 import uuid
 import logging
 from typing import Callable, Any, Dict
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 from PIL import Image
 
 from services.redis_service import redis_service
@@ -14,8 +14,14 @@ from services.s3_service import s3_service
 
 logger = logging.getLogger(__name__)
 
-# Thread pool for background tasks
-executor = ThreadPoolExecutor(max_workers=4)
+# Thread pool for CPU/GPU-bound generation tasks
+# Back to ThreadPoolExecutor - ProcessPoolExecutor has pickle issues
+# Memory management will be handled by explicit cleanup in generation functions
+executor = ThreadPoolExecutor(max_workers=1)  # Only 1 at a time to avoid OOM
+
+# Separate thread pool for I/O-bound operations (model downloads)
+# This prevents model downloads from blocking generation tasks
+io_executor = ThreadPoolExecutor(max_workers=10)
 
 
 class TaskService:
@@ -57,8 +63,9 @@ class TaskService:
 
             # Run generation in thread pool to avoid blocking
             loop = asyncio.get_event_loop()
+            # Use lambda to pass kwargs correctly to the function
             image_bytes = await loop.run_in_executor(
-                executor, generation_func, **generation_kwargs
+                executor, lambda: generation_func(**generation_kwargs)
             )
 
             # Update progress

@@ -206,8 +206,8 @@ async def generate_multi_angle(request: QwenMultiAngleRequest):
         )
 
 
-def edit_image(
-    input_image: Image.Image,
+def edit_image_direct(
+    image_url: str,
     prompt: str,
     negative_prompt: str = "",
     guidance_scale: float = 1.0,
@@ -219,32 +219,17 @@ def edit_image(
     scheduler_shift: float = 3.0,
 ) -> bytes:
     """
-    Edit image using Qwen-Image-Edit with Multi-Angle LoRA
-
-    This function replicates the ComfyUI workflow capabilities:
-    - Scales image to target megapixels (ImageScaleToTotalPixels)
-    - Uses ModelSamplingAuraFlow with shift parameter
-    - Applies CFG normalization
-    - Uses Lightning LoRA for fast 8-step editing
-    - Uses Multi-Angle LoRA for camera control
-
-    Args:
-        input_image: PIL Image to edit
-        prompt: Edit instruction (camera angle changes supported)
-        negative_prompt: Negative prompt
-        guidance_scale: CFG scale (1.0 recommended)
-        true_cfg_scale: True CFG scale (1.0 recommended)
-        num_inference_steps: Number of steps (8 recommended with Lightning)
-        seed: Random seed
-        scale_to_megapixels: Scale image to specific megapixels (1.0 = 1MP)
-        use_cfg_norm: Enable CFG normalization
-        scheduler_shift: ModelSamplingAuraFlow shift (3.0 recommended)
-
-    Returns:
-        Edited image as bytes
+    Edit image using component-by-component loading with CPU offloading
+    This uses qwen_model_service which handles memory efficiently
     """
     try:
-        # Edit image using Qwen model service
+        # Download image from URL
+        input_image = s3_service.download_image_from_url(image_url)
+
+        if input_image is None:
+            raise RuntimeError(f"Failed to download image from {image_url}")
+
+        # Edit image using qwen_model_service (handles CPU offloading)
         edited_image = qwen_model_service.edit_image(
             image=input_image,
             prompt=prompt,
@@ -262,9 +247,9 @@ def edit_image(
         return image_to_bytes(edited_image)
 
     except Exception as e:
-        logger.error(f"Qwen image editing error: {str(e)}")
-        # Return error placeholder image
-        error_image = Image.new("RGB", (input_image.width, input_image.height), color="red")
+        logger.error(f"Image editing error: {str(e)}")
+        # Return error placeholder
+        error_image = Image.new("RGB", (1024, 1024), color="red")
         draw = ImageDraw.Draw(error_image)
         draw.text((10, 10), f"Error: {str(e)[:100]}", fill="white")
         return image_to_bytes(error_image)
@@ -324,22 +309,11 @@ async def image_to_image(
             f"Steps: {num_inference_steps}, CFG: {guidance_scale}, Shift: {scheduler_shift}"
         )
 
-        # Download image from URL
-        input_image = s3_service.download_image_from_url(image_url)
-
-        if input_image is None:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Failed to download image from URL: {image_url}"
-            )
-
-        logger.info(f"Successfully downloaded image: {input_image.size}")
-
-        # Submit task and get session_id
+        # Submit task with component-based generation (CPU offloading)
         session_id = await task_service.submit_task(
-            generation_func=edit_image,
+            generation_func=edit_image_direct,
             generation_kwargs={
-                "input_image": input_image,
+                "image_url": image_url,
                 "prompt": prompt,
                 "negative_prompt": negative_prompt,
                 "guidance_scale": guidance_scale,

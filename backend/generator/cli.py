@@ -537,9 +537,9 @@ Examples:
         "-o", "--output", help="Output file path (optional)"
     )
     remove_wm_img_parser.add_argument(
-        "--no-wait",
+        "--wait",
         action="store_true",
-        help="Don't wait for completion"
+        help="Wait for completion (default: return session_id immediately)"
     )
 
     # remove_watermark_video command
@@ -582,9 +582,9 @@ Examples:
         "-o", "--output", help="Output file path (optional)"
     )
     remove_wm_vid_parser.add_argument(
-        "--no-wait",
+        "--wait",
         action="store_true",
-        help="Don't wait for completion"
+        help="Wait for completion (default: return session_id immediately)"
     )
 
     # change_angle command
@@ -655,9 +655,9 @@ Supported camera angle instructions (Chinese):
         "-o", "--output", help="Output file path (optional, downloads result if set)"
     )
     change_angle_parser.add_argument(
-        "--no-wait",
+        "--wait",
         action="store_true",
-        help="Don't wait for completion, just return session_id",
+        help="Wait for completion (default: return session_id immediately)",
     )
 
     # status command
@@ -685,7 +685,7 @@ Supported camera angle instructions (Chinese):
             guidance_scale=args.guidance_scale,
             seed=args.seed,
             output=args.output,
-            wait=not args.no_wait,
+            wait=args.wait,  # Default False, only wait if --wait is specified
             verbose=args.verbose,
         )
 
@@ -703,7 +703,7 @@ Supported camera angle instructions (Chinese):
             seed=args.seed,
             preserve_audio=not args.no_audio,
             output=args.output,
-            wait=not args.no_wait,
+            wait=args.wait,  # Default False, only wait if --wait is specified
             verbose=args.verbose,
         )
 
@@ -725,7 +725,7 @@ Supported camera angle instructions (Chinese):
             use_cfg_norm=not args.no_cfg_norm,
             scheduler_shift=args.scheduler_shift,
             output=args.output,
-            wait=not args.no_wait,
+            wait=args.wait,  # Default False, only wait if --wait is specified
             verbose=args.verbose,
         )
 

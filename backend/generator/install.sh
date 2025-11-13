@@ -134,6 +134,16 @@ EOF
 
 print_status "Python dependencies installed"
 
+# Step 7.1: Install latest diffusers for Qwen support
+echo ""
+echo "📦 Installing latest diffusers from git (for Qwen Multi-Angle support)..."
+sudo -u "$SERVICE_USER" bash << EOF
+source "$VENV_DIR/bin/activate"
+pip install git+https://github.com/huggingface/diffusers.git
+EOF
+
+print_status "Latest diffusers installed (QwenImageEditPlusPipeline available)"
+
 # Step 8: Create .env file if it doesn't exist
 echo ""
 echo "⚙️  Setting up environment configuration..."

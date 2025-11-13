@@ -58,18 +58,27 @@ class ModelLoader:
         """
         # Strategy 1: Try local path first
         if local_path and local_path.exists():
-            logger.info(f"Loading model from local path: {local_path}")
+            # Check if we have read permission
             try:
+                # Test if we can access the file
+                local_path.stat()
+                logger.info(f"Loading model from local path: {local_path}")
                 return self._load_from_local(
                     local_path=local_path,
                     model_class=model_class,
                     torch_dtype=torch_dtype,
                     **kwargs,
                 )
+            except PermissionError as e:
+                logger.warning(f"No permission to access local path: {local_path}")
+                if hf_repo is None:
+                    raise
+                # Fall through to HuggingFace download
             except Exception as e:
                 logger.warning(f"Failed to load from local path: {e}")
                 if hf_repo is None:
                     raise
+                # Fall through to HuggingFace download
 
         # Strategy 2: Download from HuggingFace
         if hf_repo:
@@ -110,22 +119,26 @@ class ModelLoader:
 
         # Use model_class if provided, otherwise return path
         if model_class:
-            # For diffusers models
-            if hasattr(model_class, "from_single_file"):
-                return model_class.from_single_file(
-                    str(local_path),
-                    torch_dtype=torch_dtype,
-                    **kwargs,
-                )
-            elif hasattr(model_class, "from_pretrained"):
-                # Try loading as pretrained model
-                return model_class.from_pretrained(
-                    str(local_path.parent),
-                    torch_dtype=torch_dtype,
-                    **kwargs,
-                )
-            else:
-                raise ValueError(f"Model class {model_class} doesn't support loading")
+            try:
+                # For diffusers models
+                if hasattr(model_class, "from_single_file"):
+                    return model_class.from_single_file(
+                        str(local_path),
+                        torch_dtype=torch_dtype,
+                        **kwargs,
+                    )
+                elif hasattr(model_class, "from_pretrained"):
+                    # Try loading as pretrained model
+                    return model_class.from_pretrained(
+                        str(local_path.parent),
+                        torch_dtype=torch_dtype,
+                        **kwargs,
+                    )
+                else:
+                    raise ValueError(f"Model class {model_class} doesn't support loading")
+            except PermissionError as e:
+                logger.error(f"Permission denied loading model from {local_path}: {e}")
+                raise  # Re-raise to be caught by caller for fallback
         else:
             # Return path for manual loading
             return str(local_path)
@@ -162,6 +175,7 @@ class ModelLoader:
                     return model_class.from_single_file(
                         local_file,
                         torch_dtype=torch_dtype,
+                        token=hf_token,
                         **kwargs,
                     )
                 else:
@@ -185,6 +199,7 @@ class ModelLoader:
                     return model_class.from_pretrained(
                         local_dir,
                         torch_dtype=torch_dtype,
+                        token=hf_token,
                         **kwargs,
                     )
                 else:
@@ -236,17 +251,20 @@ class ModelLoader:
         # Strategy 2: Download from HuggingFace
         if hf_repo:
             logger.info(f"Downloading LoRA from HuggingFace: {hf_repo}")
+            hf_token = settings.hf_token
             try:
                 if hf_filename:
                     pipeline.load_lora_weights(
                         hf_repo,
                         weight_name=hf_filename,
                         adapter_name=adapter_name,
+                        token=hf_token,
                     )
                 else:
                     pipeline.load_lora_weights(
                         hf_repo,
                         adapter_name=adapter_name,
+                        token=hf_token,
                     )
                 logger.info(f"LoRA '{adapter_name}' loaded from HuggingFace")
                 return pipeline

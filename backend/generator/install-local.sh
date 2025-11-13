@@ -37,7 +37,7 @@ echo "Current directory: $CURRENT_DIR"
 
 # Configuration
 INSTALL_DIR="/opt/image-generator"
-SERVICE_USER="image-gen"
+SERVICE_USER="ubuntu"  # Run as ubuntu user to avoid permission issues
 VENV_DIR="${INSTALL_DIR}/venv"
 
 print_status "Starting installation from: $CURRENT_DIR"
@@ -86,14 +86,15 @@ else
     print_warning "No NVIDIA GPU detected (CPU mode only)"
 fi
 
-# Step 3: Create service user
+# Step 3: Verify service user exists
 echo ""
-echo "👤 Setting up service user..."
+echo "👤 Verifying service user..."
 if ! id "$SERVICE_USER" &>/dev/null; then
-    useradd -r -s /bin/bash -d "$INSTALL_DIR" -m "$SERVICE_USER"
-    print_status "Service user '$SERVICE_USER' created"
+    print_error "Service user '$SERVICE_USER' does not exist!"
+    print_error "This script should be run on an EC2 instance with ubuntu user."
+    exit 1
 else
-    print_warning "Service user '$SERVICE_USER' already exists"
+    print_status "Service user '$SERVICE_USER' exists"
 fi
 
 # Step 4: Create installation directory and copy files
@@ -133,6 +134,17 @@ uv pip install -e '$INSTALL_DIR' > /dev/null 2>&1
 "
 
 print_status "Python dependencies installed"
+
+# Step 6.1: Install latest diffusers for Qwen support
+echo ""
+echo "📦 Installing latest diffusers from git (for Qwen Multi-Angle support)..."
+sudo -u "$SERVICE_USER" bash -c "
+cd '$INSTALL_DIR'
+source '$VENV_DIR/bin/activate'
+pip install git+https://github.com/huggingface/diffusers.git > /dev/null 2>&1
+"
+
+print_status "Latest diffusers installed (QwenImageEditPlusPipeline available)"
 
 # Step 7: Set up .env file
 echo ""
