@@ -342,6 +342,7 @@ export default function InfiniteCanvas({
     setSelectedEl(null);
     setOverlay(null);
     setShowVpPanel(false);
+    setShowFaceSwapPanel(false); // Issue #2 fix: close face swap panel when clicking away
   }, []);
 
   const onPointerMove = useCallback(
@@ -508,6 +509,7 @@ export default function InfiniteCanvas({
               e.stopPropagation();
               (e.currentTarget as any).setPointerCapture?.(e.pointerId);
               setSelectedEl(e.currentTarget);
+              setShowFaceSwapPanel(false); // Issue #2 fix: close face swap panel when selecting different image
               updateOverlay();
               dragInfo.current = {
                 key: img.key,
@@ -546,6 +548,7 @@ export default function InfiniteCanvas({
             onClick={(e) => {
               e.stopPropagation();
               setSelectedEl(e.currentTarget);
+              setShowFaceSwapPanel(false); // Issue #2 fix: close face swap panel when selecting different image
               updateOverlay();
             }}
           />
@@ -580,6 +583,7 @@ export default function InfiniteCanvas({
                 e.stopPropagation();
                 const target = e.currentTarget as HTMLImageElement;
                 setSelectedEl(target);
+                setShowFaceSwapPanel(false); // Issue #2 fix: close face swap panel when selecting different image
                 updateOverlay();
                 setShowVpPanel(false);
                 setShowEditPanel(false);
@@ -1272,6 +1276,12 @@ export default function InfiniteCanvas({
 
                 console.log("Face swap task submitted:", swapResult.job_id);
 
+                // Close panel immediately after successful submission (Issue #1 fix)
+                setShowFaceSwapPanel(false);
+                setFaceSwapTargetUrl("");
+                setFacePositionPrompt("");
+                setExpressionPrompt("");
+
                 // Add face swap job to processing state (will show loading on masked image)
                 const swapJob: ProcessingJob = {
                   jobId: swapResult.job_id,
@@ -1336,11 +1346,7 @@ export default function InfiniteCanvas({
                   );
                 });
 
-                // Close panel and reset
-                setShowFaceSwapPanel(false);
-                setFaceSwapTargetUrl("");
-                setFacePositionPrompt("");
-                setExpressionPrompt("");
+                // Panel already closed earlier (after submission)
               } catch (err) {
                 console.error("Face swap workflow error:", err);
                 alert("Face swap failed: " + (err instanceof Error ? err.message : String(err)));
