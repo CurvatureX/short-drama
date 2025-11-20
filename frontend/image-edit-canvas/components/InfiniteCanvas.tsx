@@ -26,6 +26,7 @@ type ProcessingJob = {
   resultUrl?: string;
   x: number;
   y: number;
+  transitionDuration?: number; // For ImageLoader transition speed
 };
 
 type Props = {
@@ -159,6 +160,7 @@ export default function InfiniteCanvas({
         sourceUrl: selectedEl.src,
         x: placeholderX,
         y: placeholderY,
+        transitionDuration: 100000, // Long transition during processing
       };
       setProcessingJobs((prev) => [...prev, newJob]);
 
@@ -171,6 +173,8 @@ export default function InfiniteCanvas({
                   ...job,
                   status: status.status,
                   resultUrl: status.result_url,
+                  // Set short transition when completed for smooth final reveal
+                  transitionDuration: status.status === "completed" ? 100 : job.transitionDuration,
                 }
               : job
           )
@@ -633,8 +637,13 @@ export default function InfiniteCanvas({
           );
         }
 
-        // Show ImageLoader for pending/processing jobs, placeholder for failed
-        if ((job.status === "pending" || job.status === "processing") && job.sourceUrl) {
+        // Show ImageLoader for pending/processing/completed jobs
+        if ((job.status === "pending" || job.status === "processing" || job.status === "completed") && job.sourceUrl) {
+          // Use result URL if completed, otherwise use source URL
+          const displayUrl = job.resultUrl || job.sourceUrl;
+          // Use short transition when showing final result, long transition during processing
+          const transition = job.transitionDuration ?? 100000;
+
           return (
             <div
               key={`job-${job.jobId}`}
@@ -650,7 +659,7 @@ export default function InfiniteCanvas({
               }}
             >
               <ImageLoader
-                src={job.sourceUrl}
+                src={displayUrl}
                 alt="Processing..."
                 width={512}
                 height={512}
@@ -659,7 +668,7 @@ export default function InfiniteCanvas({
                 cellGap={2}
                 cellColor="#60a5fa"
                 blinkSpeed={800}
-                transitionDuration={600}
+                transitionDuration={transition}
                 fadeOutDuration={400}
                 loadingDelay={0}
               />
@@ -1023,6 +1032,7 @@ export default function InfiniteCanvas({
                   sourceUrl: selectedEl.src,
                   x: placeholderX,
                   y: placeholderY,
+                  transitionDuration: 100000, // Long transition during processing
                 };
                 setProcessingJobs((prev) => [...prev, newJob]);
 
@@ -1035,6 +1045,8 @@ export default function InfiniteCanvas({
                             ...job,
                             status: status.status,
                             resultUrl: status.result_url,
+                            // Set short transition when completed for smooth final reveal
+                            transitionDuration: status.status === "completed" ? 100 : job.transitionDuration,
                           }
                         : job
                     )
@@ -1356,6 +1368,7 @@ export default function InfiniteCanvas({
                   sourceUrl: maskedImageUrl,
                   x: resultX,
                   y: resultY,
+                  transitionDuration: 100000, // Long transition during processing
                 };
                 setProcessingJobs((prev) => [...prev, swapJob]);
 
@@ -1364,7 +1377,13 @@ export default function InfiniteCanvas({
                   setProcessingJobs((prev) =>
                     prev.map((job) =>
                       job.jobId === swapResult.job_id
-                        ? { ...job, status: status.status, resultUrl: status.result_url }
+                        ? {
+                            ...job,
+                            status: status.status,
+                            resultUrl: status.result_url,
+                            // Set short transition when completed for smooth final reveal
+                            transitionDuration: status.status === "completed" ? 100 : job.transitionDuration,
+                          }
                         : job
                     )
                   );

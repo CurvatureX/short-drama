@@ -180,6 +180,19 @@ export default function ImageLoader({
   }, [dimensions, gridSize, transitionDuration, loadingDelay, sampleColorFromRegion, onLoad])
 
   // ============================================================================
+  // RESET ON SRC CHANGE
+  // ============================================================================
+  useEffect(() => {
+    // Reset all state when src changes
+    setIsLoading(true)
+    setShowImage(false)
+    setIsTransitioning(false)
+    setIsFadingOut(false)
+    processedRef.current = false
+    loadStartTimeRef.current = Date.now()
+  }, [src])
+
+  // ============================================================================
   // IMAGE LOAD DETECTION
   // ============================================================================
   useEffect(() => {
