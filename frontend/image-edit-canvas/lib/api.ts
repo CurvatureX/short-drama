@@ -239,12 +239,12 @@ export async function submitFaceSwap(
     throw new Error(`Face swap failed: ${res.status} ${text}`)
   }
   const data = await res.json()
-  // Map task_id to job_id for consistency with GPU tasks
+  // Return the response directly - API already returns job_id
   return {
-    job_id: data.task_id,
+    job_id: data.job_id,
     status: data.status,
     result_url: data.result_url,
-    error: data.error_message,
+    error: data.error,
   }
 }
 
