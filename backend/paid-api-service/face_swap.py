@@ -415,23 +415,26 @@ def swap_with_seedream(
     target_face_url: str,
     face_index: int = 0,
     prompt: str = None,
-    size: ImageSize = None
+    size: ImageSize = None,
+    skip_mask: bool = False
 ) -> str:
     """
     Combined API: Full face swap pipeline (calls create_face_mask + apply_face_swap)
 
     This method:
-    1. Downloads the source image
-    2. Uses QWEN3-VL to detect faces and create a black elliptical mask
-    3. Uploads the masked image to S3
+    1. Downloads the source image (or uses already masked image if skip_mask=True)
+    2. Uses QWEN3-VL to detect faces and create a black elliptical mask (unless skip_mask=True)
+    3. Uploads the masked image to S3 (unless skip_mask=True)
     4. Uses SeeDream to reconstruct the face using the target face
 
     Args:
         source_image_url: URL of the source image (where face will be swapped)
+                         If skip_mask=True, this should be the already masked image
         target_face_url: URL of the target face image (identity to use)
         face_index: Index of the face to swap (default: 0, first detected face)
         prompt: Custom prompt for SeeDream (default: face swap prompt)
         size: Output image size (default: auto-detect)
+        skip_mask: If True, skip face mask generation and use source_image_url as masked image
 
     Returns:
         CloudFront URL of the final face-swapped image
@@ -446,12 +449,18 @@ def swap_with_seedream(
     print("Full Face Swap Pipeline")
     print("=" * 80)
 
-    # Step 1: Create face mask
-    print("\n[Pipeline Step 1/2] Creating face mask...")
-    masked_image_url = create_face_mask(source_image_url, face_index)
+    if skip_mask:
+        # Source image is already masked, skip mask generation
+        print("\n[Pipeline] Skipping face mask generation (using pre-masked image)")
+        masked_image_url = source_image_url
+    else:
+        # Step 1: Create face mask
+        print("\n[Pipeline Step 1/2] Creating face mask...")
+        masked_image_url = create_face_mask(source_image_url, face_index)
 
     # Step 2: Apply face swap
-    print("\n[Pipeline Step 2/2] Applying face swap...")
+    step_number = "Step 2/2" if not skip_mask else "Step 1/1"
+    print(f"\n[Pipeline {step_number}] Applying face swap...")
     final_url = apply_face_swap(masked_image_url, target_face_url, prompt, size)
 
     print("=" * 80)

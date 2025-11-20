@@ -158,6 +158,7 @@ class FullFaceSwapRequest(BaseModel):
     expression_prompt: Optional[str] = None
     face_index: Optional[int] = 0
     size: Optional[str] = None
+    skip_mask: Optional[bool] = False  # If True, source_image_url is already masked
 
 class JobResponse(BaseModel):
     job_id: str

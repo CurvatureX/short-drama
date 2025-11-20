@@ -219,6 +219,7 @@ export async function submitFaceSwap(
     facePositionPrompt?: string
     expressionPrompt?: string
     faceIndex?: number
+    skipMask?: boolean  // If true, sourceImageUrl is already masked
   }
 ): Promise<JobResponse> {
   const res = await fetch(`${ORCH_BASE}/api/v1/full-face-swap/tasks`, {
@@ -232,6 +233,7 @@ export async function submitFaceSwap(
       expression_prompt: options?.expressionPrompt,
       face_index: options?.faceIndex || 0,
       size: 'auto',
+      skip_mask: options?.skipMask || false,
     }),
   })
   if (!res.ok) {

@@ -1297,6 +1297,7 @@ export default function InfiniteCanvas({
                 const swapResult = await submitFaceSwap(maskedImageUrl, faceSwapTargetUrl, {
                   model: faceSwapModel,
                   expressionPrompt: expressionPrompt || undefined,
+                  skipMask: true,  // maskedImageUrl is already masked, skip face detection
                 });
 
                 console.log("Face swap task submitted:", swapResult.job_id);

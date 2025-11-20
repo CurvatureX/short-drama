@@ -60,6 +60,7 @@ class FullFaceSwapRequest(BaseModel):
     face_index: Optional[int] = 0
     prompt: Optional[str] = None
     size: Optional[str] = None
+    skip_mask: Optional[bool] = False  # If True, source_image_url is already masked
 
 
 class JobStatus(BaseModel):
@@ -138,7 +139,8 @@ async def process_full_face_swap(job_id: str, request: FullFaceSwapRequest):
             target_face_url=request.target_face_url,
             face_index=request.face_index,
             prompt=request.prompt,
-            size=size
+            size=size,
+            skip_mask=request.skip_mask
         )
 
         jobs[job_id]['status'] = 'completed'
