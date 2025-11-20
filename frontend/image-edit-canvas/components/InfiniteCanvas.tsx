@@ -664,9 +664,6 @@ export default function InfiniteCanvas({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                background: "rgba(255, 255, 255, 0.9)",
-                borderRadius: "8px",
-                border: "2px solid #e5e7eb",
                 pointerEvents: "none",
               }}
             >
