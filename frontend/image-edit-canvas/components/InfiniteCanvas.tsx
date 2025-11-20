@@ -1293,11 +1293,11 @@ export default function InfiniteCanvas({
                 }
 
                 // Step 4: Submit face swap task using masked image
+                // Note: maskedImageUrl is already masked, API will not detect/mask again
                 console.log("Step 4: Submitting face swap task...");
                 const swapResult = await submitFaceSwap(maskedImageUrl, faceSwapTargetUrl, {
                   model: faceSwapModel,
                   expressionPrompt: expressionPrompt || undefined,
-                  skipMask: true,  // maskedImageUrl is already masked, skip face detection
                 });
 
                 console.log("Face swap task submitted:", swapResult.job_id);

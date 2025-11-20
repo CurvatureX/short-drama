@@ -54,13 +54,17 @@ class FaceSwapRequest(BaseModel):
 
 
 class FullFaceSwapRequest(BaseModel):
-    """Request model for full face swap pipeline"""
-    source_image_url: str
+    """
+    Request model for face swap (expects pre-masked source image)
+
+    Note: source_image_url should be an image with the face already masked.
+    This API does NOT perform face detection or masking.
+    """
+    source_image_url: str  # Should be a pre-masked image
     target_face_url: str
     face_index: Optional[int] = 0
     prompt: Optional[str] = None
     size: Optional[str] = None
-    skip_mask: Optional[bool] = False  # If True, source_image_url is already masked
 
 
 class JobStatus(BaseModel):
@@ -128,19 +132,24 @@ async def process_face_swap(job_id: str, request: FaceSwapRequest):
 
 
 async def process_full_face_swap(job_id: str, request: FullFaceSwapRequest):
-    """Background task for full face swap pipeline"""
+    """
+    Background task for face swap (assumes source image is already masked)
+
+    This function expects source_image_url to be a pre-masked image.
+    It does NOT perform face detection or masking - it directly applies face swap.
+    """
     try:
         jobs[job_id]['status'] = 'processing'
 
         size = parse_image_size(request.size)
 
-        result_url = swap_with_seedream(
-            source_image_url=request.source_image_url,
+        # Directly apply face swap (no face detection, no masking)
+        # source_image_url should already be a masked image
+        result_url = apply_face_swap(
+            masked_image_url=request.source_image_url,
             target_face_url=request.target_face_url,
-            face_index=request.face_index,
             prompt=request.prompt,
-            size=size,
-            skip_mask=request.skip_mask
+            size=size
         )
 
         jobs[job_id]['status'] = 'completed'

@@ -151,14 +151,19 @@ class FaceMaskRequest(BaseModel):
     face_index: Optional[int] = 0
 
 class FullFaceSwapRequest(BaseModel):
-    source_image_url: str
+    """
+    Request model for face swap (expects pre-masked source image)
+
+    Note: source_image_url should be an image with the face already masked.
+    This API does NOT perform face detection or masking.
+    """
+    source_image_url: str  # Should be a pre-masked image
     target_face_url: str
     model: Optional[str] = "seedream"
     face_position_prompt: Optional[str] = None
     expression_prompt: Optional[str] = None
     face_index: Optional[int] = 0
     size: Optional[str] = None
-    skip_mask: Optional[bool] = False  # If True, source_image_url is already masked
 
 class JobResponse(BaseModel):
     job_id: str

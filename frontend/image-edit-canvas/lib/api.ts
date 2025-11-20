@@ -208,18 +208,22 @@ export async function submitFaceMask(
 }
 
 /**
- * Submit a full face swap task (combines face mask + face swap)
+ * Submit a face swap task
+ *
+ * NOTE: sourceImageUrl should be a pre-masked image.
+ * This API does NOT perform face detection or masking.
+ * Use submitFaceMask() first to generate the masked image.
+ *
  * Returns job_id in the same format as other tasks
  */
 export async function submitFaceSwap(
-  sourceImageUrl: string,
+  sourceImageUrl: string,  // Should be a pre-masked image
   targetFaceUrl: string,
   options?: {
     model?: string
     facePositionPrompt?: string
     expressionPrompt?: string
     faceIndex?: number
-    skipMask?: boolean  // If true, sourceImageUrl is already masked
   }
 ): Promise<JobResponse> {
   const res = await fetch(`${ORCH_BASE}/api/v1/full-face-swap/tasks`, {
@@ -233,7 +237,6 @@ export async function submitFaceSwap(
       expression_prompt: options?.expressionPrompt,
       face_index: options?.faceIndex || 0,
       size: 'auto',
-      skip_mask: options?.skipMask || false,
     }),
   })
   if (!res.ok) {
