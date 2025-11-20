@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import ImageLoader from "./ImageLoader";
 import {
   submitQwenEdit,
   submitCameraAngle,
@@ -592,7 +593,41 @@ export default function InfiniteCanvas({
           );
         }
 
-        // Show placeholder for pending/failed jobs
+        // Show ImageLoader for pending jobs, placeholder for failed
+        if (job.status === "pending" && job.sourceUrl) {
+          return (
+            <div
+              key={`job-${job.jobId}`}
+              style={{
+                position: "fixed",
+                left,
+                top,
+                transform: `scale(${actualScale})`,
+                transformOrigin: "0 0",
+                width: 512,
+                height: 512,
+                pointerEvents: "none",
+              }}
+            >
+              <ImageLoader
+                src={job.sourceUrl}
+                alt="Processing..."
+                width={512}
+                height={512}
+                gridSize={15}
+                cellShape="circle"
+                cellGap={2}
+                cellColor="#60a5fa"
+                blinkSpeed={800}
+                transitionDuration={600}
+                fadeOutDuration={400}
+                loadingDelay={0}
+              />
+            </div>
+          );
+        }
+
+        // Show placeholder for failed jobs
         return (
           <div
             key={`job-${job.jobId}`}
@@ -604,14 +639,8 @@ export default function InfiniteCanvas({
               transformOrigin: "0 0",
               width: 512,
               height: 512,
-              background:
-                job.status === "failed"
-                  ? "linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%)"
-                  : "linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)",
-              border:
-                job.status === "failed"
-                  ? "2px dashed #f44336"
-                  : "2px dashed #999",
+              background: "linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%)",
+              border: "2px dashed #f44336",
               borderRadius: 8,
               display: "flex",
               flexDirection: "column",
@@ -629,11 +658,7 @@ export default function InfiniteCanvas({
                 padding: "0 20px",
               }}
             >
-              {job.status === "failed"
-                ? "❌ Processing Failed"
-                : `⏳ Processing ${
-                    job.type === "qwen" ? "Qwen Edit" : "Camera Angle"
-                  }...`}
+              ❌ Processing Failed
             </div>
             {job.status === "pending" && job.jobId && (
               <div style={{ fontSize: 11, color: "#999" }}>
