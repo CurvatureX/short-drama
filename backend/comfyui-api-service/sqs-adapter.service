@@ -1,0 +1,47 @@
+[Unit]
+Description=SQS to ComfyUI Adapter Service
+Documentation=https://github.com/your-org/short-drama
+After=network.target comfyui-unified-api.service
+Requires=comfyui-unified-api.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/comfyui_api_service
+
+# Python environment
+Environment="PATH=/home/ubuntu/ComfyUI/venv/bin:/usr/local/bin:/usr/bin:/bin"
+
+# AWS Configuration
+Environment="AWS_REGION=us-east-1"
+Environment="SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/YOUR_ACCOUNT_ID/gpu_tasks_queue"
+Environment="DYNAMODB_TABLE=task_store"
+Environment="COMFYUI_API_URL=http://localhost:8000"
+Environment="POLL_INTERVAL=20"
+
+# AWS credentials (if not using IAM role)
+# Environment="AWS_ACCESS_KEY_ID=YOUR_KEY"
+# Environment="AWS_SECRET_ACCESS_KEY=YOUR_SECRET"
+
+# Execution
+ExecStart=/home/ubuntu/ComfyUI/venv/bin/python3 /home/ubuntu/comfyui_api_service/sqs_to_comfy_adapter.py
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Logging
+StandardOutput=append:/var/log/sqs-adapter.log
+StandardError=append:/var/log/sqs-adapter-error.log
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Resource limits
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

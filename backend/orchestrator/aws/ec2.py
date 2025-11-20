@@ -53,6 +53,36 @@ def list_ec2_instances(region: str, filters: Optional[List[Dict[str, Any]]] = No
         raise
 
 
+def get_instance_ip(instance_id: str, region: str) -> Optional[str]:
+    """
+    Get the current public IP address of an EC2 instance.
+
+    Args:
+        instance_id: The ID of the instance
+        region: AWS region name
+
+    Returns:
+        Public IP address string, or None if instance doesn't have one
+
+    Raises:
+        ClientError: If AWS API call fails
+    """
+    ec2_client = boto3.client('ec2', region_name=region)
+
+    try:
+        response = ec2_client.describe_instances(InstanceIds=[instance_id])
+
+        if not response['Reservations']:
+            return None
+
+        instance = response['Reservations'][0]['Instances'][0]
+        return instance.get('PublicIpAddress')
+
+    except ClientError as e:
+        print(f"Error getting instance IP for {instance_id}: {e}")
+        raise
+
+
 def start_instance(instance_id: str, region: str) -> Dict[str, Any]:
     """
     Start a stopped EC2 instance.

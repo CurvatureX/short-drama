@@ -1,0 +1,29 @@
+[Unit]
+Description=Paid API Service
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/paid-api-service
+Environment="PATH=/home/ubuntu/paid-api-service/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Environment="PORT=8000"
+Environment="HOST=0.0.0.0"
+Environment="DASHSCOPE_API_KEY=your_dashscope_api_key"
+Environment="ARK_API_KEY=your_ark_api_key"
+Environment="AWS_ACCESS_KEY=your_aws_access_key"
+Environment="AWS_ACCESS_SECRET=your_aws_secret_key"
+Environment="AWS_DEFAULT_REGION=us-east-1"
+Environment="S3_BUCKET_NAME=short-drama-assets"
+Environment="CLOUDFRONT_DOMAIN=https://d3bg7alr1qwred.cloudfront.net"
+
+ExecStart=/home/ubuntu/paid-api-service/venv/bin/python api_service.py
+
+Restart=always
+RestartSec=10
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,21 @@
+version: '3.9'
+
+services:
+  canvas_service:
+    build:
+      context: ../canvas_service
+      dockerfile: Dockerfile
+    image: canvas-service:dev
+    ports:
+      - "9000:9000"
+    env_file:
+      - ../.env
+    environment:
+      # Backend service config
+      - PRESIGN_EXPIRY_SECONDS=${PRESIGN_EXPIRY_SECONDS:-3600}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000}
+      # Pass-through AWS creds from host env if present
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_SESSION_TOKEN
+    restart: unless-stopped

@@ -1,0 +1,26 @@
+[Unit]
+Description=SQS to Paid API Service Adapter
+After=network.target paid-api.service
+Requires=paid-api.service
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/paid-api-service
+Environment="PATH=/home/ubuntu/paid-api-service/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Environment="AWS_REGION=us-east-1"
+Environment="CPU_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/982081090398/cpu_tasks_queue"
+Environment="DYNAMODB_TABLE=task_store"
+Environment="PAID_API_URL=http://localhost:8000"
+Environment="POLL_INTERVAL=20"
+
+ExecStart=/home/ubuntu/paid-api-service/venv/bin/python sqs_adapter.py
+
+Restart=always
+RestartSec=10
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

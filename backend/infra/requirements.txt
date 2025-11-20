@@ -1,0 +1,7 @@
+# AWS CDK Dependencies
+
+aws-cdk-lib==2.100.0
+constructs>=10.0.0,<11.0.0
+
+# For development
+aws-cdk.aws-lambda-python-alpha==2.100.0a0

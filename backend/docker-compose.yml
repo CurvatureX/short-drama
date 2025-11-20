@@ -1,0 +1,97 @@
+services:
+  # Canvas Service - manages image uploads and session state
+  canvas-service:
+    build:
+      context: ./canvas_service
+      dockerfile: Dockerfile
+    container_name: canvas-service
+    ports:
+      - "9000:9000"
+    environment:
+      # Supabase Configuration
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SECRET_KEY}
+
+      # S3 Storage
+      S3_BUCKET: ${S3_BUCKET_NAME}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${AWS_ACCESS_SECRET}
+
+      # Optional Configuration
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      PRESIGN_EXPIRY_SECONDS: ${PRESIGN_EXPIRY_SECONDS:-3600}
+      CLOUDFRONT_DOMAIN: ${CLOUDFRONT_DOMAIN}
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+    restart: unless-stopped
+
+    networks:
+      - backend-network
+
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # Orchestrator Service - manages GPU/CPU task orchestration
+  orchestrator:
+    build:
+      context: ./orchestrator
+      dockerfile: Dockerfile
+    container_name: orchestrator
+    ports:
+      - "8080:8080"
+    environment:
+      # AWS Configuration
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${AWS_ACCESS_SECRET}
+      AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN:-}
+
+      # SQS & DynamoDB
+      SQS_QUEUE_URL: ${SQS_QUEUE_URL}
+      CPU_SQS_QUEUE_URL: ${CPU_SQS_QUEUE_URL}
+      DYNAMODB_TABLE: ${DYNAMODB_TABLE:-task_store}
+
+      # GPU Instance
+      GPU_INSTANCE_ID: ${GPU_INSTANCE_ID:-i-0f0f6fd680921de5f}
+
+      # S3 Storage (for results)
+      S3_BUCKET_NAME: ${S3_BUCKET_NAME}
+      CLOUDFRONT_DOMAIN: ${CLOUDFRONT_DOMAIN}
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+    restart: unless-stopped
+
+    networks:
+      - backend-network
+
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+networks:
+  backend-network:
+    driver: bridge

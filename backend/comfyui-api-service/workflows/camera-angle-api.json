@@ -1,0 +1,121 @@
+{
+  "1": {
+    "inputs": {
+      "strength": 1,
+      "model": ["2", 0]
+    },
+    "class_type": "CFGNorm"
+  },
+  "2": {
+    "inputs": {
+      "shift": 3,
+      "model": ["20", 0]
+    },
+    "class_type": "ModelSamplingAuraFlow"
+  },
+  "3": {
+    "inputs": {
+      "prompt": "",
+      "clip": ["76", 0],
+      "vae": ["22", 0],
+      "image1": ["39", 0]
+    },
+    "class_type": "TextEncodeQwenImageEditPlus"
+  },
+  "10": {
+    "inputs": {
+      "pixels": ["39", 0],
+      "vae": ["22", 0]
+    },
+    "class_type": "VAEEncode"
+  },
+  "11": {
+    "inputs": {
+      "prompt": "将镜头转为俯视",
+      "clip": ["76", 0],
+      "vae": ["22", 0],
+      "image1": ["39", 0]
+    },
+    "class_type": "TextEncodeQwenImageEditPlus"
+  },
+  "12": {
+    "inputs": {
+      "samples": ["14", 0],
+      "vae": ["22", 0]
+    },
+    "class_type": "VAEDecode"
+  },
+  "14": {
+    "inputs": {
+      "seed": 216113436124078,
+      "steps": 8,
+      "cfg": 1,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": ["1", 0],
+      "positive": ["11", 0],
+      "negative": ["3", 0],
+      "latent_image": ["10", 0]
+    },
+    "class_type": "KSampler"
+  },
+  "20": {
+    "inputs": {
+      "lora_name": "Qwen-Image-Lightning-8steps-V1.1.safetensors",
+      "strength_model": 1,
+      "model": ["79", 0]
+    },
+    "class_type": "LoraLoaderModelOnly"
+  },
+  "22": {
+    "inputs": {
+      "vae_name": "qwen_image_vae.safetensors"
+    },
+    "class_type": "VAELoader"
+  },
+  "31": {
+    "inputs": {
+      "image": "placeholder.jpg"
+    },
+    "class_type": "LoadImage"
+  },
+  "39": {
+    "inputs": {
+      "upscale_method": "lanczos",
+      "megapixels": 1,
+      "image": ["31", 0]
+    },
+    "class_type": "ImageScaleToTotalPixels"
+  },
+  "76": {
+    "inputs": {
+      "clip_name": "qwen_2.5_vl_7b.safetensors",
+      "type": "stable_diffusion",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader"
+  },
+  "77": {
+    "inputs": {
+      "unet_name": "Qwen-Image-Edit-2509_fp8_e4m3fn.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader"
+  },
+  "79": {
+    "inputs": {
+      "lora_name": "镜头转换.safetensors",
+      "strength_model": 1,
+      "model": ["77", 0]
+    },
+    "class_type": "LoraLoaderModelOnly"
+  },
+  "80": {
+    "inputs": {
+      "filename_prefix": "ComfyUI",
+      "images": ["12", 0]
+    },
+    "class_type": "SaveImage"
+  }
+}

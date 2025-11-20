@@ -1,0 +1,20 @@
+[Unit]
+Description=ComfyUI Qwen Edit API Service
+After=network.target comfyui.service
+Requires=comfyui.service
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/comfyui_api_service
+Environment="PATH=/home/ubuntu/ComfyUI/venv/bin:/usr/local/bin:/usr/bin:/bin"
+Environment="S3_BUCKET=your-bucket-name"
+Environment="AWS_REGION=us-east-1"
+ExecStart=/home/ubuntu/ComfyUI/venv/bin/python /home/ubuntu/comfyui_api_service/qwen_edit_api.py
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/qwen-edit-api.log
+StandardError=append:/var/log/qwen-edit-api-error.log
+
+[Install]
+WantedBy=multi-user.target

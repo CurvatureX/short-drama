@@ -1,0 +1,17 @@
+[Unit]
+Description=ComfyUI Service
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/ComfyUI
+Environment="PATH=/home/ubuntu/ComfyUI/venv/bin:/usr/local/bin:/usr/bin:/bin"
+ExecStart=/home/ubuntu/ComfyUI/venv/bin/python /home/ubuntu/ComfyUI/main.py --listen 0.0.0.0 --port 8188
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/comfyui.log
+StandardError=append:/var/log/comfyui-error.log
+
+[Install]
+WantedBy=multi-user.target
