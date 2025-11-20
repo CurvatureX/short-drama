@@ -38,6 +38,7 @@ class CanvasServiceStack(Stack):
         supabase_url: str,
         supabase_key: str,
         cloudfront_domain: str,
+        cors_origins: str,
         **kwargs
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
@@ -119,6 +120,7 @@ class CanvasServiceStack(Stack):
                 "SUPABASE_URL": supabase_url,
                 "SUPABASE_SERVICE_ROLE_KEY": supabase_key,
                 "CLOUDFRONT_DOMAIN": cloudfront_domain,
+                "CORS_ORIGINS": cors_origins,
             },
             logging=ecs.LogDriver.aws_logs(
                 stream_prefix="canvas-service",

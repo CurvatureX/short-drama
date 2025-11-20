@@ -38,6 +38,7 @@ class OrchestratorServiceStack(Stack):
         table_name: str,
         gpu_instance_id: str,
         orchestrator_role: iam.Role,
+        cors_origins: str,
         **kwargs
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
@@ -98,6 +99,7 @@ class OrchestratorServiceStack(Stack):
                 "SQS_QUEUE_URL": queue_url,
                 "DYNAMODB_TABLE": table_name,
                 "GPU_INSTANCE_ID": gpu_instance_id,
+                "CORS_ORIGINS": cors_origins,
             },
             logging=ecs.LogDriver.aws_logs(
                 stream_prefix="orchestrator",

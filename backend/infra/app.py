@@ -47,6 +47,9 @@ supabase_url = os.environ.get('SUPABASE_URL', '')
 supabase_key = os.environ.get('SUPABASE_SECRET_KEY', '')
 cloudfront_domain = os.environ.get('CLOUDFRONT_DOMAIN', 'https://d3bg7alr1qwred.cloudfront.net')
 
+# CORS configuration - comma-separated list of allowed origins
+cors_origins = os.environ.get('CORS_ORIGINS', 'https://canvas.starmates.ai,https://www.starmates.ai')
+
 # Stack 1: SQS Queue with DLQ
 sqs_stack = SqsStack(
     app,
@@ -119,6 +122,7 @@ orchestrator_service_stack = OrchestratorServiceStack(
     table_name=dynamodb_stack.table.table_name,
     gpu_instance_id=gpu_instance_id,
     orchestrator_role=iam_stack.orchestrator_role,
+    cors_origins=cors_origins,
     env=env,
     description="ECS Fargate service for GPU task orchestrator"
 )
@@ -136,6 +140,7 @@ canvas_service_stack = CanvasServiceStack(
     supabase_url=supabase_url,
     supabase_key=supabase_key,
     cloudfront_domain=cloudfront_domain,
+    cors_origins=cors_origins,
     env=env,
     description="ECS Fargate service for Canvas image editing"
 )
