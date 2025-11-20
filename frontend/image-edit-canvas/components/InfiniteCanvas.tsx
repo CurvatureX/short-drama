@@ -20,7 +20,7 @@ type Positioned = ImageItem;
 // Processing job with placeholder
 type ProcessingJob = {
   jobId: string;
-  status: "pending" | "completed" | "failed";
+  status: "pending" | "processing" | "completed" | "failed";
   type: "qwen" | "camera";
   sourceUrl: string;
   resultUrl?: string;
@@ -106,6 +106,8 @@ export default function InfiniteCanvas({
   const [faceSwapTargetUrl, setFaceSwapTargetUrl] = useState<string>("");
   const [facePositionPrompt, setFacePositionPrompt] = useState<string>("");
   const [expressionPrompt, setExpressionPrompt] = useState<string>("");
+  // Image metadata for displaying filename and dimensions
+  const [imageMetadata, setImageMetadata] = useState<Record<string, { width: number; height: number; filename: string }>>({});
   const [sendingFaceSwap, setSendingFaceSwap] = useState(false);
   const editAreaRef = useRef<HTMLTextAreaElement | null>(null);
   const adjustEditHeight = useCallback(() => {
@@ -488,38 +490,75 @@ export default function InfiniteCanvas({
       {items.map((img) => {
         const left = tx + img.x * actualScale;
         const top = ty + img.y * actualScale;
+        const metadata = imageMetadata[img.key];
+        const filename = img.key.split('/').pop() || img.key;
+
         return (
-          <img
-            key={img.key}
-            src={img.url}
-            style={{
-              position: "fixed",
-              left,
-              top,
-              transform: `scale(${actualScale})`,
-              transformOrigin: "0 0",
-              userSelect: "none",
-              pointerEvents: "auto",
-              cursor: "move",
-              width: "auto",
-              height: "auto",
-            }}
-            alt={img.key}
-            draggable={false}
-            onPointerDown={(e) => {
-              e.stopPropagation();
-              (e.currentTarget as any).setPointerCapture?.(e.pointerId);
-              setSelectedEl(e.currentTarget);
-              setShowFaceSwapPanel(false); // Issue #2 fix: close face swap panel when selecting different image
-              updateOverlay();
-              dragInfo.current = {
-                key: img.key,
-                startX: e.clientX,
-                startY: e.clientY,
-                imgX: img.x,
-                imgY: img.y,
-              };
-            }}
+          <React.Fragment key={img.key}>
+            {/* Image label */}
+            {metadata && (
+              <div
+                style={{
+                  position: "fixed",
+                  left,
+                  top: top - 24 * actualScale,
+                  transform: `scale(${actualScale})`,
+                  transformOrigin: "0 0",
+                  background: "rgba(0, 0, 0, 0.75)",
+                  color: "white",
+                  padding: "4px 8px",
+                  borderRadius: "4px",
+                  fontSize: "12px",
+                  fontFamily: "monospace",
+                  whiteSpace: "nowrap",
+                  pointerEvents: "none",
+                  userSelect: "none",
+                }}
+              >
+                {filename} • {metadata.width}×{metadata.height}
+              </div>
+            )}
+            <img
+              src={img.url}
+              style={{
+                position: "fixed",
+                left,
+                top,
+                transform: `scale(${actualScale})`,
+                transformOrigin: "0 0",
+                userSelect: "none",
+                pointerEvents: "auto",
+                cursor: "move",
+                width: "auto",
+                height: "auto",
+              }}
+              alt={img.key}
+              draggable={false}
+              onLoad={(e) => {
+                const imgEl = e.currentTarget;
+                setImageMetadata((prev) => ({
+                  ...prev,
+                  [img.key]: {
+                    width: imgEl.naturalWidth,
+                    height: imgEl.naturalHeight,
+                    filename,
+                  },
+                }));
+              }}
+              onPointerDown={(e) => {
+                e.stopPropagation();
+                (e.currentTarget as any).setPointerCapture?.(e.pointerId);
+                setSelectedEl(e.currentTarget);
+                setShowFaceSwapPanel(false); // Issue #2 fix: close face swap panel when selecting different image
+                updateOverlay();
+                dragInfo.current = {
+                  key: img.key,
+                  startX: e.clientX,
+                  startY: e.clientY,
+                  imgX: img.x,
+                  imgY: img.y,
+                };
+              }}
             onPointerUp={(e) => {
               (e.currentTarget as any).releasePointerCapture?.(e.pointerId);
 
@@ -553,6 +592,7 @@ export default function InfiniteCanvas({
               updateOverlay();
             }}
           />
+          </React.Fragment>
         );
       })}
       {/* Render processing job placeholders */}
@@ -593,8 +633,8 @@ export default function InfiniteCanvas({
           );
         }
 
-        // Show ImageLoader for pending jobs, placeholder for failed
-        if (job.status === "pending" && job.sourceUrl) {
+        // Show ImageLoader for pending/processing jobs, placeholder for failed
+        if ((job.status === "pending" || job.status === "processing") && job.sourceUrl) {
           return (
             <div
               key={`job-${job.jobId}`}
