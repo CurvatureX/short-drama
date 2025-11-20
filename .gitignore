@@ -1,5 +1,11 @@
 .DS_Store
 
+# Environment files with secrets
+.env
+.env.local
+.env.*.local
+**/.env
+
 # Python cache files
 __pycache__/
 *.pyc

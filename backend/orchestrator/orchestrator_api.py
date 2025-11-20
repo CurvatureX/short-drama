@@ -307,6 +307,17 @@ async def health_check():
         }
     }
 
+
+@app.get("/api/v1/health")
+async def health_check_v1():
+    """
+    Health check endpoint for API v1.
+
+    Alias for /health to support ALB routing with /api/v1 prefix.
+    """
+    return await health_check()
+
+
 @app.get("/debug/gpu-instance")
 async def get_gpu_instance_info():
     """

@@ -63,6 +63,7 @@ class IamStack(Stack):
                     "dynamodb:GetItem",
                     "dynamodb:UpdateItem",
                     "dynamodb:Query",
+                    "dynamodb:DescribeTable",  # For health checks
                 ],
                 resources=[table_arn, table_index_arn]
             )
