@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import ImageLoader from "./ImageLoader";
+import { GooeyLoader } from "./GooeyLoader";
 import {
   submitQwenEdit,
   submitCameraAngle,
@@ -471,26 +471,37 @@ export default function InfiniteCanvas({
   const actualScale = scale * BASE_SCALE;
 
   return (
-    <div
-      ref={viewportRef}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerCancel={onPointerUp}
-      style={{
-        position: "fixed",
-        left: 0,
-        top: 0,
-        width: "100%",
-        height: "100%",
-        overflow: "hidden",
-        cursor: panning ? "grabbing" : "grab",
-        background:
-          "repeating-conic-gradient(#f8f8f8 0% 25%, #ffffff 0% 50%) 50% / 40px 40px",
-        backgroundSize: `${40 * actualScale}px ${40 * actualScale}px`,
-        backgroundPosition: `${tx}px ${ty}px`,
-      }}
-    >
+    <>
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+      `}</style>
+      <div
+        ref={viewportRef}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+        style={{
+          position: "fixed",
+          left: 0,
+          top: 0,
+          width: "100%",
+          height: "100%",
+          overflow: "hidden",
+          cursor: panning ? "grabbing" : "grab",
+          background:
+            "repeating-conic-gradient(#f8f8f8 0% 25%, #ffffff 0% 50%) 50% / 40px 40px",
+          backgroundSize: `${40 * actualScale}px ${40 * actualScale}px`,
+          backgroundPosition: `${tx}px ${ty}px`,
+        }}
+      >
       {items.map((img) => {
         const left = tx + img.x * actualScale;
         const top = ty + img.y * actualScale;
@@ -637,13 +648,8 @@ export default function InfiniteCanvas({
           );
         }
 
-        // Show ImageLoader for pending/processing/completed jobs
-        if ((job.status === "pending" || job.status === "processing" || job.status === "completed") && job.sourceUrl) {
-          // Use result URL if completed, otherwise use source URL
-          const displayUrl = job.resultUrl || job.sourceUrl;
-          // Use short transition when showing final result, long transition during processing
-          const transition = job.transitionDuration ?? 100000;
-
+        // Show GooeyLoader for pending/processing jobs
+        if ((job.status === "pending" || job.status === "processing") && job.sourceUrl) {
           return (
             <div
               key={`job-${job.jobId}`}
@@ -655,24 +661,43 @@ export default function InfiniteCanvas({
                 transformOrigin: "0 0",
                 width: 512,
                 height: 512,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "rgba(255, 255, 255, 0.9)",
+                borderRadius: "8px",
+                border: "2px solid #e5e7eb",
                 pointerEvents: "none",
               }}
             >
-              <ImageLoader
-                src={displayUrl}
-                alt="Processing..."
-                width={512}
-                height={512}
-                gridSize={15}
-                cellShape="circle"
-                cellGap={2}
-                cellColor="#60a5fa"
-                blinkSpeed={800}
-                transitionDuration={transition}
-                fadeOutDuration={400}
-                loadingDelay={0}
+              <GooeyLoader
+                primaryColor="#60a5fa"
+                secondaryColor="#3b82f6"
+                borderColor="#e5e7eb"
               />
             </div>
+          );
+        }
+
+        // Show result image when completed
+        if (job.status === "completed" && job.resultUrl) {
+          return (
+            <img
+              key={`job-${job.jobId}`}
+              src={job.resultUrl}
+              style={{
+                position: "fixed",
+                left,
+                top,
+                transform: `scale(${actualScale})`,
+                transformOrigin: "0 0",
+                width: "auto",
+                height: "auto",
+                animation: "fadeIn 0.3s ease-in",
+                pointerEvents: "none",
+              }}
+              alt="Result"
+            />
           );
         }
 
@@ -1459,6 +1484,7 @@ export default function InfiniteCanvas({
           </button>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }
