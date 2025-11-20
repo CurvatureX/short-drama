@@ -41,7 +41,7 @@ class IamStack(Stack):
             description="IAM role for GPU Orchestrator Fargate task",
         )
 
-        # SQS permissions (send messages)
+        # SQS permissions (send messages to both GPU and CPU queues)
         self.orchestrator_role.add_to_policy(
             iam.PolicyStatement(
                 effect=iam.Effect.ALLOW,
@@ -50,7 +50,10 @@ class IamStack(Stack):
                     "sqs:GetQueueAttributes",
                     "sqs:GetQueueUrl",
                 ],
-                resources=[queue_arn]
+                resources=[
+                    queue_arn,  # GPU tasks queue
+                    f"arn:aws:sqs:{self.region}:{self.account}:cpu_tasks_queue",  # CPU tasks queue
+                ]
             )
         )
 

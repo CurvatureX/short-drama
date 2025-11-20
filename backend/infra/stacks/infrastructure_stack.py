@@ -18,6 +18,7 @@ from aws_cdk import aws_ec2 as ec2
 from aws_cdk import aws_ecs as ecs
 from aws_cdk import aws_elasticloadbalancingv2 as elbv2
 from aws_cdk import aws_servicediscovery as servicediscovery
+from aws_cdk import aws_certificatemanager as acm
 from constructs import Construct
 
 
@@ -81,6 +82,11 @@ class InfrastructureStack(Stack):
             ec2.Peer.any_ipv4(),
             ec2.Port.tcp(80),
             "Allow HTTP from internet"
+        )
+        self.alb_sg.add_ingress_rule(
+            ec2.Peer.any_ipv4(),
+            ec2.Port.tcp(443),
+            "Allow HTTPS from internet"
         )
 
         # ECS Security Group
@@ -159,11 +165,31 @@ class InfrastructureStack(Stack):
         )
 
         # ==================== ALB Listeners and Routing ====================
-        # Default listener forwards to Canvas Service (handles most paths)
-        self.listener = self.alb.add_listener(
+        # Import existing SSL certificate for api.starmates.ai
+        certificate = acm.Certificate.from_certificate_arn(
+            self,
+            "ApiCertificate",
+            certificate_arn="arn:aws:acm:us-east-1:982081090398:certificate/65f8b420-da5e-445b-9fed-3c0040b93453"
+        )
+
+        # HTTP listener (port 80) - redirects to HTTPS
+        http_listener = self.alb.add_listener(
             "HttpListener",
             port=80,
             protocol=elbv2.ApplicationProtocol.HTTP,
+            default_action=elbv2.ListenerAction.redirect(
+                protocol="HTTPS",
+                port="443",
+                permanent=True,
+            ),
+        )
+
+        # HTTPS listener (port 443) - main listener with SSL
+        self.listener = self.alb.add_listener(
+            "HttpsListener",
+            port=443,
+            protocol=elbv2.ApplicationProtocol.HTTPS,
+            certificates=[certificate],
             default_action=elbv2.ListenerAction.forward(
                 target_groups=[self.canvas_tg]
             ),
